@@ -16,5 +16,6 @@ void draw() {
 void mousePressed() {
   
   game.add_piece(floor(float(mouseX)/width*game.cols));
+  game.check_win();
   
 }
