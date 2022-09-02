@@ -1,6 +1,6 @@
 class Game {
   
-  int cols = 7;  // "final" is the "const" of Java for primitives; see https://www.javamex.com/java_equivalents/const_java.shtml
+  int cols = 7;
   int rows = 6;
   // note that col = 0 will be the upper one, while col = cols - 1 will be the lower one (due to Processing's coordinate system)
   
@@ -53,7 +53,7 @@ class Game {
   boolean check_alignment(int[] position, int[] step, int holes_visited, int pieces_aligned, int player_index) {
     
     /**
-     * Recursive function that detects a 4-piece alignment in a particular direction
+     * Recursive function that detects if 4 pieces of the indicated player are aligned in a particular direction
      * @param position: current hole being visited, identified with [col, row]
      * @param step: the direction in question; vector [dif_col, dif_row] that gets added to position to calculate the new one
      * @param holes_visited: number of holes visited so far
@@ -92,6 +92,7 @@ class Game {
         for (int[] step : steps) {
           if (check_alignment(player_position, step, 0, 0, player_index)) {
             game_finished = true;
+            return;
           }
         }
       }
