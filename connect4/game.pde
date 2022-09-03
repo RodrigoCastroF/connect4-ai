@@ -14,13 +14,18 @@ class Game {
   // which player has the next move?
   boolean player1_turn = true;
   
+  // record each player's positions - each position corresponds to a hole in the board, identified with [col, row]
+  ArrayList<int[]> player1_positions = new ArrayList<int[]>(); 
+  ArrayList<int[]> player2_positions = new ArrayList<int[]>(); 
+  // ArrayList is like a regular array, but with more methods (like add, remove, or clear):
+  // Processing reference: https://processing.org/reference/ArrayList.html
+  // Java reference: https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html 
+  // Instead of two ArrayLists, I tried having an array (or ArrayList) with two ArrayLists, but I couldn't work with this
+  
   // record the winning player and the positions pieces that made them win
   int player_won = 0;  // 0 if no player has yet won, 1 if the 1st has won, and 2 if the 2nd has won
-  int[][] winning_positions = new int[0][2];
+  ArrayList<int[]> winning_positions = new ArrayList<int[]>();  // ArrayList of arrays
   
-  // record each player's positions - player 1's positions in positions[0]; player 2's positions in positions[1]
-  // each position corresponds to a hole in the board, identified with [col, row]
-  int positions[][][] = new int[2][0][2];
   
   // the four directions in which a connect-4 can happen (vertical, horizontal, diagonal, inverse diagonal)
   int[][] steps = new int[][] {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
@@ -39,20 +44,47 @@ class Game {
     // if column is completely filled, or the game is already finished, don't do anything
     if (rows - col_height[col] - 1 < 0 || player_won != 0) return;
     
-    // put piece on board
-    int player_index = player1_turn ? 1 : 2;
+    // position in which to put the piece
     int[] position = {col, rows - col_height[col] - 1};
-    board[position[0]][position[1]] = player_index;
-    positions[player_index-1] = (int[][]) append(positions[player_index-1], position);
     
-    // update the number of holes filled
+    // udate the board, the height of the corresponding column, and the player's positions history
+    board[position[0]][position[1]] =  player1_turn ? 1 : 2;
     col_height[col]++;
+    (player1_turn ? player1_positions : player2_positions).add(position);
     
     // change turn
     player1_turn = !player1_turn;
     
     // check if a player has won after the move
     game.check_win();
+    
+  }
+  
+  void go_back() {
+    
+    /**
+     * Rewinds back to the previous move
+     * Used for the undo button
+     * Also useful to search through several game states and then go back to the current state
+     */
+     
+    // if previous player has no recorded positions (meaning we are at the beginning), don't do anything
+    if ((player1_turn ? player2_positions : player1_positions).size() == 0) return;
+     
+    // get the last position from the previous player
+    int[] last_position = player1_turn ? player2_positions.get(player2_positions.size()-1) : player1_positions.get(player1_positions.size()-1);
+    
+    // remove it from the board, the column's height record, and the player's positions history
+    board[last_position[0]][last_position[1]] =  0;
+    col_height[last_position[0]]--;
+    (player1_turn ? player2_positions : player1_positions).remove(last_position);
+    // println("removed [", last_position[0], ", ", last_position[1], "] from player", player1_turn ? "1" : "2");
+    
+    // change turn
+    player1_turn = !player1_turn;
+    
+    // put game back into an unfinished state
+    player_won = 0;
     
   }
   
@@ -75,14 +107,14 @@ class Game {
       return true;
     }
     
-    winning_positions = (int[][]) append(winning_positions, position);
+    winning_positions.add(position);
     
     // false if we get out of board, or find a non-friendly piece
     if (position[0] < 0 || position[0] >= cols ||
         position[1] < 0 || position[1] >= rows ||
         board[position[0]][position[1]] != player_index)
     { 
-      winning_positions = new int [0][2];  // clear array
+      winning_positions.clear();
       return false; 
     }
     
@@ -103,7 +135,8 @@ class Game {
      */
     
     for (int player_index = 1; player_index <= 2; player_index++) {
-      for (int[] player_position : positions[player_index-1]) {  // this is for-each in Java; https://www.geeksforgeeks.org/for-each-loop-in-java/
+      for (int[] player_position : (player_index == 1 ? player1_positions : player2_positions)) {
+        // this is for-each in Java ("enhanced for"); https://www.geeksforgeeks.org/for-each-loop-in-java/
         for (int[] step : steps) {
           if (check_alignment(player_position, step, 0, player_index)) {
             player_won = player_index;
