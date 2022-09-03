@@ -11,9 +11,12 @@ class Game {
   // number of positions occupied in each column
   int col_height[] = new int[cols];  // source: https://stackoverflow.com/questions/2154251/any-shortcut-to-initialize-all-array-elements-to-zero
   
-  // which player has the next move? and, is the game finished?
+  // which player has the next move?
   boolean player1_turn = true;
-  boolean game_finished = false;
+  
+  // record the winning player and the positions pieces that made them win
+  int player_won = 0;  // 0 if no player has yet won, 1 if the 1st has won, and 2 if the 2nd has won
+  int[][] winning_positions = new int[0][2];
   
   // record each player's positions - player 1's positions in positions[0]; player 2's positions in positions[1]
   // each position corresponds to a hole in the board, identified with [col, row]
@@ -34,7 +37,7 @@ class Game {
      */
     
     // if column is completely filled, or the game is already finished, don't do anything
-    if (rows - col_height[col] - 1 < 0 || game_finished) return;
+    if (rows - col_height[col] - 1 < 0 || player_won != 0) return;
     
     // put piece on board
     int player_index = player1_turn ? 1 : 2;
@@ -50,13 +53,12 @@ class Game {
     
   }
   
-  boolean check_alignment(int[] position, int[] step, int holes_visited, int pieces_aligned, int player_index) {
+  boolean check_alignment(int[] position, int[] step, int pieces_aligned, int player_index) {
     
     /**
      * Recursive function that detects if 4 pieces of the indicated player are aligned in a particular direction
      * @param position: current hole being visited, identified with [col, row]
      * @param step: the direction in question; vector [dif_col, dif_row] that gets added to position to calculate the new one
-     * @param holes_visited: number of holes visited so far
      * @param pieces_aligned: number of pieces of the player found consecutively in the direction considered
      * @param player_index: 1 or 2
      * @return: true if pieces_aligned reaches 4, false otherwise
@@ -64,34 +66,44 @@ class Game {
     
     // BASE CASE
     
-    // true if we get to 4 pieces aligned; false if we get to 4 holes visited, or out of board
-    if (pieces_aligned >= 4) return true;
-    if (holes_visited >= 4 || position[0] < 0 || position[0] >= cols || position[1] < 0 || position[1] >= rows) return false;  
+    // true if we get to 4 pieces aligned
+    if (pieces_aligned >= 4)
+    {
+      return true;
+    }
+    
+    winning_positions = (int[][]) append(winning_positions, position);
+    
+    // false if we get out of board, or find a non-friendly piece
+    if (position[0] < 0 || position[0] >= cols ||
+        position[1] < 0 || position[1] >= rows ||
+        board[position[0]][position[1]] != player_index)
+    { 
+      winning_positions = new int [0][2];  // clear array
+      return false; 
+    }
     
     // RECURSIVE STEP
-    
-    // if this position (continues to) have a piece of the player, increment pieces_aligned; otherwise, reset it back to 0
-    int new_pieces_aligned = board[position[0]][position[1]] == player_index ? pieces_aligned + 1 : 0;
     
     int[] new_position = new int[2];
     new_position[0] = position[0] + step[0];
     new_position[1] = position[1] + step[1];
     
-    return check_alignment(new_position, step, holes_visited + 1, new_pieces_aligned, player_index);
+    return check_alignment(new_position, step, pieces_aligned + 1, player_index);
     
   }
   
   void check_win() {
     
     /**
-     * Check if each player already has 4 pieces aligned and update game_finished if necessary
+     * Check if each player already has 4 pieces aligned and update player_won if necessary
      */
     
     for (int player_index = 1; player_index <= 2; player_index++) {
       for (int[] player_position : positions[player_index-1]) {  // this is for-each in Java; https://www.geeksforgeeks.org/for-each-loop-in-java/
         for (int[] step : steps) {
-          if (check_alignment(player_position, step, 0, 0, player_index)) {
-            game_finished = true;
+          if (check_alignment(player_position, step, 0, player_index)) {
+            player_won = player_index;
             return;
           }
         }
@@ -114,20 +126,31 @@ class Game {
     strokeWeight(5);
   
     // show the holes
+    color filling_color;
     for (int col = 0; col < cols; col++) {
       for (int row = 0; row < rows; row++) {
         
         // show the pieces inside
-        fill(255, 255, 255);  // white (no piece)
-        if (board[col][row] == 1) fill(230, 49, 35);  // red (player 1's piece)
-        if (board[col][row] == 2) fill(249, 224, 1);  // yellow (player 2's piece)
+        filling_color = color(255, 255, 255);  // white (no piece)
+        if (board[col][row] == 1) filling_color = color(230, 49, 35);  // red (player 1's piece)
+        if (board[col][row] == 2) filling_color = color(249, 224, 1);  // yellow (player 2's piece)
         
         // show shadows in holes if mouse is hovering over column and the game is yet to finish
-        if (floor(float(mouseX)/width*cols) == col && rows - row > col_height[col] && !game_finished) {
-          if (player1_turn) fill(247, 191, 187);  // lighter red
-          else fill(254, 241, 125);  // lighter yellow
+        if (floor(float(mouseX)/width*cols) == col && rows - row > col_height[col] && player_won == 0) {
+          if (player1_turn) filling_color = color(247, 191, 187);  // lighter red
+          else filling_color = color(254, 241, 125);  // lighter yellow
         }
         
+        // highlight the winning pieces if the game has finished
+        if (player_won != 0) {
+          for (int[] winning_pos : winning_positions) {
+            if (winning_pos[0] == col && winning_pos[1] == row) {
+              filling_color = lerpColor(filling_color, color(255, 255, 255), sin(millis() / 100) * sin(millis() / 100));
+            }
+          }
+        }
+        
+        fill(filling_color);
         ellipse(width*col/cols + diameter/2 + margin/2, height*row/rows + diameter/2 + margin/2, diameter, diameter);
         
       }
