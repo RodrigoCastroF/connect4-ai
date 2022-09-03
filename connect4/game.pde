@@ -51,6 +51,9 @@ class Game {
     // change turn
     player1_turn = !player1_turn;
     
+    // check if a player has won after the move
+    game.check_win();
+    
   }
   
   boolean check_alignment(int[] position, int[] step, int pieces_aligned, int player_index) {

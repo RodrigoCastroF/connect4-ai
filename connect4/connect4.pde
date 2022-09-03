@@ -1,11 +1,11 @@
-
-
 Game game;
+MiniMax minimax;
 
 void setup() {
   
   size(700, 600);
   game = new Game();
+  minimax = new MiniMax();
   
 }
 
@@ -17,11 +17,10 @@ void draw() {
 
 void mousePressed() {
   
+  // player 1 (human)'s turn
   game.add_piece(floor(float(mouseX)/width*game.cols));
   
-  // System.out.println(java.util.Arrays.deepToString(game.winning_positions).replace("], ", "]\n"));
-  // println();
-  
-  game.check_win();
+  // player 2 (AI)'s turn
+  game.add_piece(minimax.choose_column(game));
   
 }
