@@ -24,26 +24,19 @@ void mousePressed() {
     if (game.player_won != 1) game.go_back();
     game.go_back();
     
-    /* print("player1: "); for (int[] position : game.player1_positions) {
-      print("[", position[0], ", ", position[1], "] ");
-    } println();
-    print("player2: "); for (int[] position : game.player2_positions) {
-      print("[", position[0], ", ", position[1], "] ");
-    } println(); println(); */
-    
     return;
   }
   
+  println();
+  println("NEW BOARD----");
+  
   // player 1 (human)'s turn
   game.add_piece(floor(float(mouseX)/width*game.cols));
-  /* print("player1: "); for (int[] position : game.player1_positions) {
-    print("[", position[0], ", ", position[1], "] ");
-  } println(); */
+  
+  println();
+  println("NEW BOARD----");
   
   // player 2 (AI)'s turn
   game.add_piece(minimax.choose_column(game));
-  /* print("player2: "); for (int[] position : game.player2_positions) {
-    print("[", position[0], ", ", position[1], "] ");
-  } println(); println(); */
   
 }

@@ -60,7 +60,7 @@ class Game {
     
     // ------ test of GameEvaluation
     GameEvaluation game_eval = new GameEvaluation(this);
-    game_eval.evaluate();
+    println("player", player1_turn ? 1 : 2, "'s full evaluation: ", game_eval.evaluate());
     
   }
   
@@ -152,21 +152,8 @@ class Game {
     
   }
   
-  
-  int evaluate() { //<>//
-    
-    /**
-     * Heuristic method to evaluate the current state of the game from the current player's perspective
-     */
-     
-    // ... 
-     
-    return 0;
-    
-  }
-  
   void show() {
-    
+     //<>//
     /**
      * Display the board on screen
      */
@@ -185,7 +172,7 @@ class Game {
         
         // show the pieces inside
         filling_color = color(255, 255, 255);  // white (no piece)
-        if (board[col][row] == 1) filling_color = color(230, 49, 35);  // red (player 1's piece) //<>//
+        if (board[col][row] == 1) filling_color = color(230, 49, 35);  // red (player 1's piece)
         if (board[col][row] == 2) filling_color = color(249, 224, 1);  // yellow (player 2's piece)
         
         // show shadows in holes if mouse is hovering over column and the game is yet to finish
@@ -198,7 +185,7 @@ class Game {
         if (player_won != 0) {
           // winning_positions.contains(winning_pos)  returns always false for some reason, so I have to do this:
           for (int[] winning_pos : winning_positions) {
-            if (winning_pos[0] == col && winning_pos[1] == row) {
+            if (winning_pos[0] == col && winning_pos[1] == row) { //<>//
               filling_color = lerpColor(filling_color, color(255, 255, 255), sin(millis() / 100) * sin(millis() / 100));
             }
           }
@@ -222,10 +209,9 @@ class GameEvaluation {
   // the pieces' positions that have already been visited in each direction
   ArrayList<ArrayList<int[]>> positions_visited = new ArrayList<>();
   
-  // number of holes around the aligned pieces of each player, for every direction, and every starting position
-  // it can be 2 (holes at both ends), 1 (only at one end), or 0 (alignment surrounded by enemy pieces, and therefore useless)
-  ArrayList<ArrayList<ArrayList<Integer>>> num_holes_around = new ArrayList<>();
-  ArrayList<ArrayList<ArrayList<ArrayList<int[]>>>> holes_around = new ArrayList<>();
+  // holes enclosing the aligned pieces of each player, for every direction, and for every starting position
+  // and, in each case, the ArrayList has 0, 1 or 2 positions
+  ArrayList<ArrayList<ArrayList<ArrayList<int[]>>>> enclosing_holes = new ArrayList<>();
   
   GameEvaluation(Game game) {
     
@@ -236,36 +222,35 @@ class GameEvaluation {
       positions_visited.add(new ArrayList<int[]>());
     }
     
-    // initialize the numbers of holes
+    // initialize the enclosing holes
     for (int player_index = 1; player_index <=2; player_index++) {
-      num_holes_around.add(new ArrayList<ArrayList<Integer>>());
-      holes_around.add(new ArrayList<ArrayList<ArrayList<int[]>>>());
+      enclosing_holes.add(new ArrayList<ArrayList<ArrayList<int[]>>>());
       for (int step_index = 0; step_index < game.steps.length; step_index++) {
-        num_holes_around.get(player_index-1).add(new ArrayList<Integer>());
-        holes_around.get(player_index-1).add(new ArrayList<ArrayList<int[]>>());
+        enclosing_holes.get(player_index-1).add(new ArrayList<ArrayList<int[]>>());
       } 
     }
     
   }
   
-  int count_pieces_aligned(int[] position, int pos_index, int step_index, int player_index) {
+  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index) {
    
     /*
-     * Counts the number of pieces of the specified player in the given direction (step), starting from the indicated position
-     * Also updates the number of holes around these pieces (2, 1 or 0)
+     * Counts the number of aligned pieces of the specified player in the given direction (step), starting from the indicated position
+     * Also updates the enclosing holes around these pieces (which are 0, 1 or 2 positions)
+     * @position: current position of the board being explored
+     * @pos_index: index of the first position explored (the piece from which the method was called) in the player's recorded positions
+     * @step_index: index of the direction, given by its position in {{0, 1}, {1, 0}, {1, 1}, {1, -1}} (as defined above)
+     * @player_index: index of the player (1 or 2) whose pieces are being counted
      */
     
-    /* if (positions_visited.contains(position))
-    {
-      return 0;
-    } */
-    // as explained bellow, 'contains' doesn't work as expected, so doing this is necessary...
+    // don't explore the same pieces again
     for (int[] pos_visited : positions_visited.get(step_index)) {
       if (pos_visited[0] == position[0] && pos_visited[1] == position[1]) {
         return 0;
       }
     }
     
+    // stop exploring if we get out of the board or reach an enemy piece
     if (position[0] < 0 || position[0] >= game.cols ||
         position[1] < 0 || position[1] >= game.rows ||
         game.board[position[0]][position[1]] == 3 - player_index)  // 3 - player_index gives us the opponent's index
@@ -273,21 +258,20 @@ class GameEvaluation {
       return 0;
     }
     
+    // stop exploring if we reach an empty space and add it to the enclosing holes ArrayList
     if (game.board[position[0]][position[1]] == 0)
     {
-      int new_num_holes_around = num_holes_around.get(player_index-1).get(step_index).get(pos_index) + 1;
-      num_holes_around.get(player_index-1).get(step_index).set(pos_index, new_num_holes_around);
-      holes_around.get(player_index-1).get(step_index).get(pos_index).add(position);
+      enclosing_holes.get(player_index-1).get(step_index).get(pos_index).add(position);
       return 0;
     }
     
-    // if we have gone this far, then this position is a current player's piece position,
+    // if we have gone this far, then we know this position is a current player's piece position,
     // and we can safely add it to the visited positions
-    // ArrayList<int[]> new_positions_visited = new ArrayList<>(positions_visited);  // << unnecesary, you can modify the parameter with no trouble
     positions_visited.get(step_index).add(position);
     
+    // new positions to explore (in the direction of the step, and in the opposite one too)
     int[] new_position1 = new int[2];
-    int[] new_position2 = new int[2];  // we will explore in the opposite direction too
+    int[] new_position2 = new int[2];
     
     int[] direction = game.steps[step_index];
     
@@ -297,50 +281,88 @@ class GameEvaluation {
     new_position2[0] = position[0] - direction[0];
     new_position2[1] = position[1] - direction[1];
     
-    return count_pieces_aligned(new_position1, pos_index, step_index, player_index) +
-           count_pieces_aligned(new_position2, pos_index, step_index, player_index) + 1;
+    return count_aligned_pieces(new_position1, pos_index, step_index, player_index) +
+           count_aligned_pieces(new_position2, pos_index, step_index, player_index) + 1;
     
   }
   
-  void evaluate() {
+  float evaluate_player(int player_index) {
+    
+    /**
+     * Evaluates the given player's position in the board (heuristic method)
+     * The method goes through all connect2s and connect3s, enclosed by at least one hole, that the player has
+     * For each hole of each connectN, we add N ^ 4 / (height required to fill the whole)
+     * 
+     * MAJOR DRAWBACKS:
+     * 1) It ignores configurations like .x.x, and gives little value to others like x.xx (it would work fine with ..xx and .xxx)
+     * 2) It doesn't take into account who has the next turn, so xxx..ooo would give an equal evaluation to both players,
+     *    even if x has the turn and will, therefore, win
+     */
     
     int num_pieces_aligned;
-    int num_holes_around_here;
+    ArrayList<int[]> enclosing_holes_here;
+    int evaluation = 0;
     
-    for (int player_index = 1; player_index <= 2; player_index++) {
-      // player_index = game.player1_turn ? 1 : 2 
-      for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
+    ArrayList<int[]> player_positions;
+    int[] position;
+    
+    int height_required;
+    
+    // if player has won, change their evaluation to a very high number
+    
+    if (game.player_won == player_index) return 1000;
+    
+    // get all aligned pieces, iterating over all directions and starting positions for the given player
+    
+    for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
+    
+      player_positions = player_index == 1 ? game.player1_positions : game.player2_positions;
       
-        ArrayList<int[]> player_positions = player_index == 1 ? game.player1_positions : game.player2_positions;
-        for (int pos_index = 0; pos_index < player_positions.size(); pos_index++) {
-          
-          int[] position = player_positions.get(pos_index);
-          num_holes_around.get(player_index-1).get(step_index).add(0);
-          holes_around.get(player_index-1).get(step_index).add(new ArrayList<int[]>());
-          
-          
-          num_pieces_aligned = count_pieces_aligned(position, pos_index, step_index, player_index);
-          num_holes_around_here = num_holes_around.get(player_index-1).get(step_index).get(pos_index);
-          
-          if (num_pieces_aligned > 1) {
-            
-            print("player", player_index, "'s pieces aligned",
-                  "in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "]",
-                  "counting from [", position[0], ", ", position[1], "]: ",
-                  num_pieces_aligned, " , with these", num_holes_around_here, "holes on either side: ");
-                  
-            for (int[] hole_added : holes_around.get(player_index-1).get(step_index).get(pos_index)) {
-              print("[", hole_added[0], ", ", hole_added[1], "] ");
-            }
-            
-            println();
-          }
-            
-        }
+      for (int pos_index = 0; pos_index < player_positions.size(); pos_index++) {
         
+        position = player_positions.get(pos_index);
+        
+        // add empty array to enclosing holes to avoid a NullPointerException
+        enclosing_holes.get(player_index-1).get(step_index).add(new ArrayList<int[]>());
+        
+        // calculate the number of aligned pieces and retrieve the updated enclosing holes (which will no longer be empty)
+        num_pieces_aligned = count_aligned_pieces(position, pos_index, step_index, player_index);
+        enclosing_holes_here = enclosing_holes.get(player_index-1).get(step_index).get(pos_index);
+        
+        if (num_pieces_aligned > 1 && enclosing_holes_here.size() > 0) {
+          print("player", player_index, "'s pieces aligned",
+                "in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "]",
+                "counting from [", position[0], ", ", position[1], "]: ",
+                num_pieces_aligned, " , with these", enclosing_holes_here.size(), "holes on either side: ");
+                
+          for (int[] enclosing_hole : enclosing_holes_here) {
+            print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
+                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") ");
+                  
+            height_required = (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]];
+            // ^ number of pieces that need to be added to fill the whole
+            evaluation += num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * 1/height_required;
+            
+          }
+          println();
+        } 
       }
     }
-    println();
+    
+    return evaluation;
+    
+  }
+  
+  float evaluate() {
+    
+    /**
+     * Gives a full evaluation (their evaluation - their opponent's evaluation) of the current player
+     */
+    
+    float evaluation = evaluate_player(1) - evaluate_player(2);
+    if (!game.player1_turn) evaluation = -evaluation;
+    
+    return evaluation;
     
   }
   
