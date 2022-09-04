@@ -232,15 +232,17 @@ class GameEvaluation {
     
   }
   
-  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index) {
+  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index, int jumps, int positions_explored) { //<>//
    
-    /*
+    /**
      * Counts the number of aligned pieces of the specified player in the given direction (step), starting from the indicated position
      * Also updates the enclosing holes around these pieces (which are 0, 1 or 2 positions)
      * @position: current position of the board being explored
      * @pos_index: index of the first position explored (the piece from which the method was called) in the player's recorded positions
      * @step_index: index of the direction, given by its position in {{0, 1}, {1, 0}, {1, 1}, {1, -1}} (as defined above)
      * @player_index: index of the player (1 or 2) whose pieces are being counted
+     * @jumps: initially 1, turns into 0 when one blank space is skipped (which is allowed, to count positions like x.xx as connect3s)
+     * @positions_explored: initially 4, decrements with every call of the method
      */
     
     // don't explore the same pieces again
@@ -249,7 +251,7 @@ class GameEvaluation {
         return 0;
       }
     }
-    
+     //<>//
     // stop exploring if we get out of the board or reach an enemy piece
     if (position[0] < 0 || position[0] >= game.cols ||
         position[1] < 0 || position[1] >= game.rows ||
@@ -257,17 +259,6 @@ class GameEvaluation {
     { 
       return 0;
     }
-    
-    // stop exploring if we reach an empty space and add it to the enclosing holes ArrayList
-    if (game.board[position[0]][position[1]] == 0)
-    {
-      enclosing_holes.get(player_index-1).get(step_index).get(pos_index).add(position);
-      return 0;
-    }
-    
-    // if we have gone this far, then we know this position is a current player's piece position,
-    // and we can safely add it to the visited positions
-    positions_visited.get(step_index).add(position);
     
     // new positions to explore (in the direction of the step, and in the opposite one too)
     int[] new_position1 = new int[2];
@@ -281,8 +272,25 @@ class GameEvaluation {
     new_position2[0] = position[0] - direction[0];
     new_position2[1] = position[1] - direction[1];
     
-    return count_aligned_pieces(new_position1, pos_index, step_index, player_index) +
-           count_aligned_pieces(new_position2, pos_index, step_index, player_index) + 1;
+    // if we reach an empty space, add it to the enclosing holes ArrayList,
+    // and only continue exploring if method hasn't used its jump yet
+    if (game.board[position[0]][position[1]] == 0)
+    {
+      if (jumps > 0 && positions_explored > 0)
+      {
+        enclosing_holes.get(player_index-1).get(step_index).get(pos_index).add(position);
+        return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps - 1, positions_explored - 1) +
+               count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps - 1, positions_explored - 1);
+      }
+      return 0;
+    }
+    
+    // if we have gone this far, then we know this position is a current player's piece position,
+    // and we can safely add it to the visited positions
+    positions_visited.get(step_index).add(position);
+    
+    return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps, positions_explored - 1) +
+           count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps, positions_explored - 1) + 1;
     
   }
   
@@ -295,8 +303,14 @@ class GameEvaluation {
      * 
      * MAJOR DRAWBACKS:
      * 1) It ignores configurations like .x.x, and gives little value to others like x.xx (it would work fine with ..xx and .xxx)
-     * 2) It doesn't take into account who has the next turn, so xxx..ooo would give an equal evaluation to both players,
-     *    even if x has the turn and will, therefore, win
+     *    ^ Fixed by letting count_aligned_pieces jump one blank space
+     * 2) It doesn't take into account who has the next turn, so for this position:
+     *     .....
+     *     ....x
+     *     ....x
+     *     ooo.x
+     *    The method would give an equal evaluation to both players, even if x has the turn and will, therefore, win
+     * 3) There is value given to positions like .xxo, even though they are actually useless
      */
     
     int num_pieces_aligned;
@@ -326,7 +340,7 @@ class GameEvaluation {
         enclosing_holes.get(player_index-1).get(step_index).add(new ArrayList<int[]>());
         
         // calculate the number of aligned pieces and retrieve the updated enclosing holes (which will no longer be empty)
-        num_pieces_aligned = count_aligned_pieces(position, pos_index, step_index, player_index);
+        num_pieces_aligned = count_aligned_pieces(position, pos_index, step_index, player_index, 1, 4);
         enclosing_holes_here = enclosing_holes.get(player_index-1).get(step_index).get(pos_index);
         
         if (num_pieces_aligned > 1 && enclosing_holes_here.size() > 0) {

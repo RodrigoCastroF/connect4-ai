@@ -38,5 +38,6 @@ void mousePressed() {
   
   // player 2 (AI)'s turn
   game.add_piece(minimax.choose_column(game));
+  // game.add_piece(game.cols-1);
   
 }
