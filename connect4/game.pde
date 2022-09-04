@@ -59,8 +59,8 @@ class Game {
     game.check_win();
     
     // ------ test of GameEvaluation
-    GameEvaluation game_eval = new GameEvaluation(this);
-    println("player", player1_turn ? 1 : 2, "'s full evaluation: ", game_eval.evaluate());
+    // GameEvaluation game_eval = new GameEvaluation(this);
+    // println("player", player1_turn ? 1 : 2, "'s full evaluation: ", game_eval.evaluate());
     
   }
   
@@ -344,21 +344,21 @@ class GameEvaluation {
         enclosing_holes_here = enclosing_holes.get(player_index-1).get(step_index).get(pos_index);
         
         if (num_pieces_aligned > 1 && enclosing_holes_here.size() > 0) {
-          print("player", player_index, "'s pieces aligned",
+          /* print("player", player_index, "'s pieces aligned",
                 "in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "]",
                 "counting from [", position[0], ", ", position[1], "]: ",
-                num_pieces_aligned, " , with these", enclosing_holes_here.size(), "holes on either side: ");
+                num_pieces_aligned, " , with these", enclosing_holes_here.size(), "holes on either side: "); */
                 
           for (int[] enclosing_hole : enclosing_holes_here) {
-            print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
-                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") ");
+            /* print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
+                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") "); */
                   
             height_required = (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]];
             // ^ number of pieces that need to be added to fill the whole
             evaluation += num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * 1/height_required;
             
           }
-          println();
+          // println();
         } 
       }
     }
@@ -370,7 +370,7 @@ class GameEvaluation {
   float evaluate() {
     
     /**
-     * Gives a full evaluation (their evaluation - their opponent's evaluation) of the current player
+     * Gives a full evaluation of the current player (their evaluation minus their opponent's evaluation)
      */
     
     float evaluation = evaluate_player(1) - evaluate_player(2);
