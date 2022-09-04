@@ -5,7 +5,7 @@ void setup() {
   
   size(700, 600);
   game = new Game();
-  minimax = new MiniMax(game);
+  minimax = new MiniMax();
   
 }
 
@@ -41,7 +41,7 @@ void mousePressed() {
   } println(); */
   
   // player 2 (AI)'s turn
-  game.add_piece(minimax.choose_column());
+  game.add_piece(minimax.choose_column(game));
   /* print("player2: "); for (int[] position : game.player2_positions) {
     print("[", position[0], ", ", position[1], "] ");
   } println(); println(); */

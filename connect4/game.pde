@@ -58,6 +58,10 @@ class Game {
     // check if a player has won after the move
     game.check_win();
     
+    // ------ test of GameEvaluation
+    GameEvaluation game_eval = new GameEvaluation(this);
+    game_eval.evaluate();
+    
   }
   
   void go_back() {
@@ -148,6 +152,19 @@ class Game {
     
   }
   
+  
+  int evaluate() { //<>//
+    
+    /**
+     * Heuristic method to evaluate the current state of the game from the current player's perspective
+     */
+     
+    // ... 
+     
+    return 0;
+    
+  }
+  
   void show() {
     
     /**
@@ -168,7 +185,7 @@ class Game {
         
         // show the pieces inside
         filling_color = color(255, 255, 255);  // white (no piece)
-        if (board[col][row] == 1) filling_color = color(230, 49, 35);  // red (player 1's piece)
+        if (board[col][row] == 1) filling_color = color(230, 49, 35);  // red (player 1's piece) //<>//
         if (board[col][row] == 2) filling_color = color(249, 224, 1);  // yellow (player 2's piece)
         
         // show shadows in holes if mouse is hovering over column and the game is yet to finish
@@ -179,6 +196,7 @@ class Game {
         
         // highlight the winning pieces if the game has finished
         if (player_won != 0) {
+          // winning_positions.contains(winning_pos)  returns always false for some reason, so I have to do this:
           for (int[] winning_pos : winning_positions) {
             if (winning_pos[0] == col && winning_pos[1] == row) {
               filling_color = lerpColor(filling_color, color(255, 255, 255), sin(millis() / 100) * sin(millis() / 100));
@@ -191,6 +209,89 @@ class Game {
         
       }
     }
+    
+  }
+  
+}
+
+
+class GameEvaluation {
+  
+  Game game;
+  ArrayList<ArrayList<int[]>> positions_visited = new ArrayList<>();
+  
+  GameEvaluation(Game game) {
+    
+    this.game = game;
+    for (int[] step : game.steps) {
+      positions_visited.add(new ArrayList<int[]>());
+    }
+    
+  }
+  
+  int count_pieces_aligned(int[] position, int direction_index, int player_index) {
+   
+    /*
+     * Counts the number of pieces of the specified player in the given direction, starting from the indicated position
+     * @return: [ number of pieces aligned (int >= 0), number of holes on either side (0, 1 or 2) ]
+     */
+    
+    /* if (positions_visited.contains(position))
+    {
+      return 0;
+    } */
+    // as explained bellow, 'contains' doesn't work as expected, so doing this is necessary...
+    for (int[] pos_visited : positions_visited.get(direction_index)) {
+      if (pos_visited[0] == position[0] && pos_visited[1] == position[1]) {
+        return 0;
+      }
+    }
+    
+    // ArrayList<int[]> new_positions_visited = new ArrayList<>(positions_visited);
+    // ^^ unnecesary, you can modify the parameter with no trouble
+    
+    positions_visited.get(direction_index).add(position);
+    
+    if (position[0] < 0 || position[0] >= game.cols ||
+        position[1] < 0 || position[1] >= game.rows ||
+        game.board[position[0]][position[1]] != player_index)
+    { 
+      return 0;
+    }
+    
+    int[] new_position1 = new int[2];
+    int[] new_position2 = new int[2];  // we will explore in the opposite direction too
+    
+    int[] direction = game.steps[direction_index];
+    
+    new_position1[0] = position[0] + direction[0];
+    new_position1[1] = position[1] + direction[1];
+    
+    new_position2[0] = position[0] - direction[0];
+    new_position2[1] = position[1] - direction[1];
+    
+    return count_pieces_aligned(new_position1, direction_index, player_index) +
+           count_pieces_aligned(new_position2, direction_index, player_index) + 1;
+    
+  }
+  
+  void evaluate() {
+    
+    for (int player_index = 1; player_index <= 2; player_index++) {
+      // player_index = game.player1_turn ? 1 : 2 
+      for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
+        for (int[] player_position : (player_index == 1 ? game.player1_positions : game.player2_positions)) {
+          int num_pieces_aligned = count_pieces_aligned(player_position, step_index, player_index);
+          if (num_pieces_aligned > 1) {
+              println("player ", player_index, "'s pieces aligned",
+                      " in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "] ",
+                      "counting from [", player_position[0], ", ", player_position[1], "]: ",
+                      num_pieces_aligned);
+            }
+        }
+      }
+    }
+    println();
     
   }
   

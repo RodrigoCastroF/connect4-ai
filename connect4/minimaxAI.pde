@@ -1,12 +1,6 @@
 class MiniMax {
   
-  Game game;
-  
-  MiniMax(Game game) {
-    this.game = game; 
-  }
-  
-  int choose_column() {
+  int choose_column(Game game) {
     
     int chosen_col;
     
