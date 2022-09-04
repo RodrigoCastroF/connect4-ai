@@ -218,22 +218,41 @@ class Game {
 class GameEvaluation {
   
   Game game;
+  
+  // the pieces' positions that have already been visited in each direction
   ArrayList<ArrayList<int[]>> positions_visited = new ArrayList<>();
+  
+  // number of holes around the aligned pieces of each player, for every direction, and every starting position
+  // it can be 2 (holes at both ends), 1 (only at one end), or 0 (alignment surrounded by enemy pieces, and therefore useless)
+  ArrayList<ArrayList<ArrayList<Integer>>> num_holes_around = new ArrayList<>();
+  ArrayList<ArrayList<ArrayList<ArrayList<int[]>>>> holes_around = new ArrayList<>();
   
   GameEvaluation(Game game) {
     
     this.game = game;
-    for (int[] step : game.steps) {
+    
+    // initialize the positions visited
+    for (int step_index = 0; step_index < game.steps.length; step_index++) {
       positions_visited.add(new ArrayList<int[]>());
+    }
+    
+    // initialize the numbers of holes
+    for (int player_index = 1; player_index <=2; player_index++) {
+      num_holes_around.add(new ArrayList<ArrayList<Integer>>());
+      holes_around.add(new ArrayList<ArrayList<ArrayList<int[]>>>());
+      for (int step_index = 0; step_index < game.steps.length; step_index++) {
+        num_holes_around.get(player_index-1).add(new ArrayList<Integer>());
+        holes_around.get(player_index-1).add(new ArrayList<ArrayList<int[]>>());
+      } 
     }
     
   }
   
-  int count_pieces_aligned(int[] position, int direction_index, int player_index) {
+  int count_pieces_aligned(int[] position, int pos_index, int step_index, int player_index) {
    
     /*
-     * Counts the number of pieces of the specified player in the given direction, starting from the indicated position
-     * @return: [ number of pieces aligned (int >= 0), number of holes on either side (0, 1 or 2) ]
+     * Counts the number of pieces of the specified player in the given direction (step), starting from the indicated position
+     * Also updates the number of holes around these pieces (2, 1 or 0)
      */
     
     /* if (positions_visited.contains(position))
@@ -241,28 +260,36 @@ class GameEvaluation {
       return 0;
     } */
     // as explained bellow, 'contains' doesn't work as expected, so doing this is necessary...
-    for (int[] pos_visited : positions_visited.get(direction_index)) {
+    for (int[] pos_visited : positions_visited.get(step_index)) {
       if (pos_visited[0] == position[0] && pos_visited[1] == position[1]) {
         return 0;
       }
     }
     
-    // ArrayList<int[]> new_positions_visited = new ArrayList<>(positions_visited);
-    // ^^ unnecesary, you can modify the parameter with no trouble
-    
-    positions_visited.get(direction_index).add(position);
-    
     if (position[0] < 0 || position[0] >= game.cols ||
         position[1] < 0 || position[1] >= game.rows ||
-        game.board[position[0]][position[1]] != player_index)
+        game.board[position[0]][position[1]] == 3 - player_index)  // 3 - player_index gives us the opponent's index
     { 
       return 0;
     }
     
+    if (game.board[position[0]][position[1]] == 0)
+    {
+      int new_num_holes_around = num_holes_around.get(player_index-1).get(step_index).get(pos_index) + 1;
+      num_holes_around.get(player_index-1).get(step_index).set(pos_index, new_num_holes_around);
+      holes_around.get(player_index-1).get(step_index).get(pos_index).add(position);
+      return 0;
+    }
+    
+    // if we have gone this far, then this position is a current player's piece position,
+    // and we can safely add it to the visited positions
+    // ArrayList<int[]> new_positions_visited = new ArrayList<>(positions_visited);  // << unnecesary, you can modify the parameter with no trouble
+    positions_visited.get(step_index).add(position);
+    
     int[] new_position1 = new int[2];
     int[] new_position2 = new int[2];  // we will explore in the opposite direction too
     
-    int[] direction = game.steps[direction_index];
+    int[] direction = game.steps[step_index];
     
     new_position1[0] = position[0] + direction[0];
     new_position1[1] = position[1] + direction[1];
@@ -270,25 +297,47 @@ class GameEvaluation {
     new_position2[0] = position[0] - direction[0];
     new_position2[1] = position[1] - direction[1];
     
-    return count_pieces_aligned(new_position1, direction_index, player_index) +
-           count_pieces_aligned(new_position2, direction_index, player_index) + 1;
+    return count_pieces_aligned(new_position1, pos_index, step_index, player_index) +
+           count_pieces_aligned(new_position2, pos_index, step_index, player_index) + 1;
     
   }
   
   void evaluate() {
     
+    int num_pieces_aligned;
+    int num_holes_around_here;
+    
     for (int player_index = 1; player_index <= 2; player_index++) {
       // player_index = game.player1_turn ? 1 : 2 
       for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
-        for (int[] player_position : (player_index == 1 ? game.player1_positions : game.player2_positions)) {
-          int num_pieces_aligned = count_pieces_aligned(player_position, step_index, player_index);
+      
+        ArrayList<int[]> player_positions = player_index == 1 ? game.player1_positions : game.player2_positions;
+        for (int pos_index = 0; pos_index < player_positions.size(); pos_index++) {
+          
+          int[] position = player_positions.get(pos_index);
+          num_holes_around.get(player_index-1).get(step_index).add(0);
+          holes_around.get(player_index-1).get(step_index).add(new ArrayList<int[]>());
+          
+          
+          num_pieces_aligned = count_pieces_aligned(position, pos_index, step_index, player_index);
+          num_holes_around_here = num_holes_around.get(player_index-1).get(step_index).get(pos_index);
+          
           if (num_pieces_aligned > 1) {
-              println("player ", player_index, "'s pieces aligned",
-                      " in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "] ",
-                      "counting from [", player_position[0], ", ", player_position[1], "]: ",
-                      num_pieces_aligned);
+            
+            print("player", player_index, "'s pieces aligned",
+                  "in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "]",
+                  "counting from [", position[0], ", ", position[1], "]: ",
+                  num_pieces_aligned, " , with these", num_holes_around_here, "holes on either side: ");
+                  
+            for (int[] hole_added : holes_around.get(player_index-1).get(step_index).get(pos_index)) {
+              print("[", hole_added[0], ", ", hole_added[1], "] ");
             }
+            
+            println();
+          }
+            
         }
+        
       }
     }
     println();
