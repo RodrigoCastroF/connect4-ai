@@ -7,34 +7,33 @@ class MiniMax {
     GameEvaluation game_eval = new GameEvaluation(game);
     
     if (depth == 0 || game.player_won != 0) {
-      float evaluation = -game_eval.evaluate();
-      println(evaluated_state, evaluation);
+      float evaluation = game_eval.evaluate();
+      // println(evaluated_state, evaluation, " (for player", game.player1_turn ? 1 : 2, ")");
       return evaluation;
     }
     
-    // ---- so far only tested for depth == 0. What follows is unexplored territory
     float evaluation;
     float max_evaluation = -10000;
-    for (int col = 1; col < game.cols; col++) {
+    for (int col = 0; col < game.cols; col++) {
+      if (game.rows - game.col_height[col] > 0) {  // ensure only valid moves are considered 
       
-      // add piece to the studied game state
-      game.add_piece(col);
-      evaluated_state.add(col);
+        // add piece to the studied game state
+        game.add_piece(col);
+        evaluated_state.add(col);
+        
+        // deeply evaluate game state after adding piece
+        evaluation = -deep_evaluate(game, depth - 1);
+        max_evaluation = max(evaluation, max_evaluation);
+        
+        // remove piece from the studied game state
+        game.go_back();
+        evaluated_state.remove(evaluated_state.size() - 1);
       
-      // deeply evaluate game state after adding piece
-      evaluation = -deep_evaluate(game, depth - 1);
-      max_evaluation = max(evaluation, max_evaluation);
-      
-      // remove piece from the studied game state
-      game.go_back();
-      Object col_obj = (Integer) col;  // cast int into Object to use remove; see https://stackoverflow.com/questions/24115021/casting-int-to-object-on-java
-      evaluated_state.remove(col_obj);
-      
+      }
     }
     
-    println(max_evaluation, -game_eval.evaluate());
+    // println(evaluated_state, max_evaluation, " (for player", game.player1_turn ? 1 : 2, ")");
     return max_evaluation;
-    // ----
     
   }
   
@@ -42,30 +41,28 @@ class MiniMax {
     
     int chosen_col = 0;
     float evaluation;
-    float max_evaluation = -10000; //<>//
-    
+    float max_evaluation = -10000;
+     //<>//
     if (game.player_won == 0) {  // only do stuff if game hasn't finished yet; otherwise, this will break things
       for (int col = 0; col < game.cols; col++) {
-        if (game.rows - game.col_height[col] > 0) { // ensure moves considered are valid 
+        if (game.rows - game.col_height[col] > 0) {
           
           game.add_piece(col);
           evaluated_state.add(col); 
           
           // deeply evaluate the game state after each move, taking the best one
-          evaluation = deep_evaluate(game, 0);
+          evaluation = -deep_evaluate(game, 4);
           if (evaluation > max_evaluation) {
              max_evaluation = evaluation;
              chosen_col = col;
           }
           
           game.go_back();
-          Object col_obj = (Integer) col;
-          evaluated_state.remove(col_obj);
+          evaluated_state.remove(evaluated_state.size() - 1);
           
         }
       }
     }
-    println();
     
     return chosen_col;
     

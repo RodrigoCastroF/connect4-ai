@@ -1,12 +1,13 @@
 Game game;
 MiniMax minimax;
+ArrayList<Integer> current_state = new ArrayList<Integer> ();  // current board position (as the sequence of moves played)
 
 void setup() {
   
   size(700, 600);
   game = new Game();
   minimax = new MiniMax();
-  // check_bad_ai_2();
+  // check_bad_ai_1();
   
 }
 
@@ -22,8 +23,13 @@ void mousePressed() {
     
     // game should go back twice to undo both the human (player 1) and AI (player 2)'s moves
     // but, if the human has won (so the AI didn't make any move), the game should only go back once
-    if (game.player_won != 1) game.go_back();
+    if (game.player_won != 1) {
+      game.go_back();
+      current_state.remove(current_state.size() - 1);
+    }
     game.go_back();
+    current_state.remove(current_state.size() - 1);
+    println(current_state, "is the current game state now");
     
     // put game back into an unfinished state
     game.player_won = 0;
@@ -31,13 +37,22 @@ void mousePressed() {
     return;
   }
   
+  int chosen_col;
+  
   // player 1 (human)'s turn
-  int chosen_col = floor(float(mouseX)/width*game.cols);
-  if (!(game.rows - game.col_height[chosen_col] > 0)) return;  // if human's move is not valid, don't do anything
+  chosen_col = floor(float(mouseX)/width*game.cols);
+  if (!(game.rows - game.col_height[chosen_col] > 0) || game.player_won != 0) return;
+  // if human's move is not valid, or game is already finished, don't do anything
   game.add_piece(chosen_col);
+  current_state.add(chosen_col);
+  println(current_state, "is the current game state now");
   
   // player 2 (AI)'s turn
-  game.add_piece(minimax.choose_column(game));
+  chosen_col = minimax.choose_column(game);
+  game.add_piece(chosen_col);
+  current_state.add(chosen_col);
+  println(current_state, "is the current game state now");
+  println();
   
 }
 

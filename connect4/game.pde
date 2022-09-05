@@ -41,8 +41,8 @@ class Game {
      * @param col: column in which to add the piece
      */
     
-    // if column is completely filled, or the game is already finished, don't do anything
-    if (rows - col_height[col] - 1 < 0 || player_won != 0) return;
+    // if column is completely filled, don't do anything
+    if (rows - col_height[col] - 1 < 0) return;
     
     // position in which to put the piece
     int[] position = {col, rows - col_height[col] - 1};
@@ -299,7 +299,7 @@ class GameEvaluation {
     /**
      * Evaluates the given player's position in the board (heuristic method)
      * The method goes through all connect2s and connect3s, enclosed by at least one hole, that the player has
-     * The function is given by eval = sum(connectN){ prod(hole){N ^ 4 / (height required to fill the whole)} }
+     * The function is given by eval = sum(connectN){ prod(hole){4 ^ (N - height required to fill the hole)} }
      * 
      * MAJOR DRAWBACKS:
      * 1) It ignores configurations like .x.x, and gives little value to others like x.xx (it would work fine with ..xx and .xxx)
@@ -345,21 +345,20 @@ class GameEvaluation {
         enclosing_holes_here = enclosing_holes.get(player_index-1).get(step_index).get(pos_index);
         
         if (num_pieces_aligned > 1 && enclosing_holes_here.size() > 0) {
-          print("player", player_index, "'s pieces aligned",
+          /* print("player", player_index, "'s pieces aligned",
                 "in direction [", game.steps[step_index][0], ", ", game.steps[step_index][1], "]",
                 "counting from [", position[0], ", ", position[1], "]: ",
-                num_pieces_aligned, " , with these", enclosing_holes_here.size(), "holes on either side: ");
-          
+                num_pieces_aligned, " , with these", enclosing_holes_here.size(), "holes on either side: "); */
           evaluation_for_alignment = 1;
           for (int[] enclosing_hole : enclosing_holes_here) {
-            print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
-                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") ");      
+            /* print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
+                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") "); */  
             height_required = (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]];
             // ^ number of pieces that need to be added to fill the whole
-            evaluation_for_alignment *= num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * num_pieces_aligned * 1/height_required;
+            evaluation_for_alignment *= pow(4, num_pieces_aligned - height_required);
           }
           evaluation += evaluation_for_alignment;
-          println();
+          // println();
         } 
       }
     }
