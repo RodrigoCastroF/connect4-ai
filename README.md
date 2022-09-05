@@ -23,7 +23,7 @@ After much experimentation, I concluded that
 the best heuristic to evaluate a board position
 for a particular player is this function:
 
-$$ \sum_{a_{N}}   \prod_{h} { 4^{N - n} }} $$
+$$ \sum_{a_{N}}   \prod_{h} { 4^{N - n} } $$
 
 Where $a_{N}$ refers to every alignment of $N$ pieces (2 or 3) in the board,
 and $h$ is each of the holes enclosing this alignment, if any.
