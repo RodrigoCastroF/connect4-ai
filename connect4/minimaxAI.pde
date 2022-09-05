@@ -24,23 +24,23 @@ class MiniMax {
   
   int choose_column(Game game) {
     
-    int chosen_col = -1;
+    int chosen_col = 0;
     float evaluation;
     float max_evaluation = -10000;
-     
-    /* do {
-      chosen_col = floor(random(game.cols));
-    } while(game.rows - game.col_height[chosen_col] - 1 < 0);  // ensure the move is valid */
     
-    for (int col = 0; col < game.cols; col++) {
-      game.add_piece(col);
-      evaluation = deep_evaluate(game, 0);
-      println(col, evaluation);
-      if (evaluation > max_evaluation) {
-         max_evaluation = evaluation;
-         chosen_col = col;
+    if (game.player_won == 0) {  // only do stuff if game hasn't finished yet; otherwise, this will break things
+      for (int col = 0; col < game.cols; col++) {
+        if (game.rows - game.col_height[col] > 0) { // ensure moves considered are valid 
+          game.add_piece(col);
+          evaluation = deep_evaluate(game, 0);
+          println(col, evaluation);
+          if (evaluation > max_evaluation) {
+             max_evaluation = evaluation;
+             chosen_col = col;
+          }
+          game.go_back();
+        }
       }
-      game.go_back();
     }
     println();
     

@@ -88,7 +88,7 @@ class Game {
     player1_turn = !player1_turn;
     
     // put game back into an unfinished state
-    player_won = 0;
+    game.player_won = 0;
     
   }
   
@@ -143,7 +143,7 @@ class Game {
         // this is for-each in Java ("enhanced for"); https://www.geeksforgeeks.org/for-each-loop-in-java/
         for (int[] step : steps) {
           if (check_alignment(player_position, step, 0, player_index)) {
-            player_won = player_index;
+            player_won = player_index; //<>//
             return;
           }
         }
@@ -153,7 +153,7 @@ class Game {
   }
   
   void show() {
-     //<>//
+    
     /**
      * Display the board on screen
      */
@@ -232,7 +232,7 @@ class GameEvaluation {
     
   }
   
-  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index, int jumps, int positions_explored) { //<>//
+  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index, int jumps, int positions_explored) {
    
     /**
      * Counts the number of aligned pieces of the specified player in the given direction (step), starting from the indicated position
@@ -251,7 +251,7 @@ class GameEvaluation {
         return 0;
       }
     }
-     //<>//
+    
     // stop exploring if we get out of the board or reach an enemy piece
     if (position[0] < 0 || position[0] >= game.cols ||
         position[1] < 0 || position[1] >= game.rows ||
