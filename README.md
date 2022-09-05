@@ -23,13 +23,13 @@ After much experimentation, I concluded that
 the best heuristic to evaluate a board position
 for a particular player is this function:
 
-$$ e = \sum_{a_{N}}   \prod_{h} { 4^{N - n} } $$
+$$ e = \sum_{a_{N}}   \prod_{h_{n}} { 4^{N - n} } $$
 
 Where $a_{N}$ refers to every alignment of $N$ pieces (2 or 3) in the board,
-and $h$ is each of the holes enclosing this alignment, if any.
+and $h_{n}$ is each of the holes enclosing this alignment, if any.
 Each hole can be at one end of the alignment or in the middle.
 Finally, $n$ is the number of pieces that should be added to the board
-in order to fill the corresponding hole.
+in order to fill the hole $h_{n}$.
 
 That is, if `x` represents the pieces of the player we are evaluating,
 `o` the opponent player's pieces,
