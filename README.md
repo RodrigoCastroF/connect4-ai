@@ -23,12 +23,12 @@ After much experimentation, I concluded that
 the best heuristic to evaluate a board position
 for a particular player is this function:
 
-$$ \sum_{a_{N}}   \prod_{h} { 4^{N - n} } $$
+$$ e = \sum_{a_{N}}   \prod_{h} { 4^{N - n} } $$
 
 Where $a_{N}$ refers to every alignment of $N$ pieces (2 or 3) in the board,
 and $h$ is each of the holes enclosing this alignment, if any.
-The hole can be at one end of the alignment or in the middle.
-$n$ is the number of pieces that should be added to the board
+Each hole can be at one end of the alignment or in the middle.
+Finally, $n$ is the number of pieces that should be added to the board
 in order to fill the corresponding hole.
 
 That is, if `x` represents the pieces of the player we are evaluating,
@@ -40,6 +40,12 @@ an alignment with $N=3$ pieces and 1 hole of height $n=1$.
 an alignment with $N=2$ pieces and 2 holes of height $n=1$.
 - `ox.x.o` will also be counted as
 an alignment with $N=2$ pieces and 2 holes of height $n=1$.
+
+Of course, being Connect 4 a zero-sum game,
+the full evaluation of a player's position in the board
+should be given by:
+
+$$ E_{\mbox{player}} = e_{\mbox{player}} - e_{\mbox{opponent}} $$
 
 For greater details, read the comments found in the
 `GameEvaluation` class of `game.pde`.
