@@ -303,7 +303,9 @@ class GameEvaluation {
     /**
      * Evaluates the given player's position in the board (heuristic method)
      * The method goes through all connect2s and connect3s, enclosed by at least one hole, that the player has
-     * The function is given by eval = sum(connectN){ prod(hole){4 ^ (N - height required to fill the hole)} }
+     *
+     * The function is given by:
+     * eval = sum(connectN){ prod(hole){4 ^ (N - height required to fill the hole)} }
      * 
      * MAJOR DRAWBACKS:
      * 1) It ignores configurations like .x.x, and gives little value to others like x.xx (it would work fine with ..xx and .xxx)
