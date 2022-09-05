@@ -68,9 +68,9 @@ void check_bad_ai_1() {
 
 void check_bad_ai_2() {
   
- // ---- this particular set of moves (among others) puts ai into losing position
+  // ---- this particular set of moves (among others) puts ai into losing position
   
-  // i should try to change the heuristic to avoid this, or simply try with depth > 0
+  // UPDATE: fixed! I just changed the evalution function, giving more weight to alignments with more than one hole
   
   game.add_piece(2);
   game.add_piece(minimax.choose_column(game));
