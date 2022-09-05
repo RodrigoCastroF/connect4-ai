@@ -7,7 +7,6 @@ void setup() {
   size(700, 600);
   game = new Game();
   minimax = new MiniMax();
-  // check_bad_ai_1();
   
 }
 
@@ -39,63 +38,24 @@ void mousePressed() {
   
   int chosen_col;
   
-  // player 1 (human)'s turn
+  // PLAYER 1 (HUMAN)'S TURN
+  
   chosen_col = floor(float(mouseX)/width*game.cols);
+  
   if (!(game.rows - game.col_height[chosen_col] > 0) || game.player_won != 0) return;
   // if human's move is not valid, or game is already finished, don't do anything
+  
   game.add_piece(chosen_col);
   current_state.add(chosen_col);
   println(current_state, "is the current game state now");
   
-  // player 2 (AI)'s turn
+  // PLAYER 2 (AI)'S TURN
+  
   chosen_col = minimax.choose_column(game);
+  
   game.add_piece(chosen_col);
   current_state.add(chosen_col);
   println(current_state, "is the current game state now");
   println();
-  
-}
-
-void check_bad_ai_1() {
-  
- // ---- this particular set of moves (among others) puts ai into losing position
-  
-  // i should try to change the heuristic to avoid this, or simply try with depth > 0
-  
-  game.add_piece(1);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(3);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(0);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(4);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(6);
-  game.add_piece(minimax.choose_column(game));
-  
-  // ----
-  
-}
-
-void check_bad_ai_2() {
-  
-  // ---- this particular set of moves (among others) puts ai into losing position
-  
-  // UPDATE: fixed! I just changed the evalution function, giving more weight to alignments with more than one hole
-  
-  game.add_piece(2);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(3);
-  game.add_piece(minimax.choose_column(game));
-  
-  game.add_piece(4);
-  game.add_piece(minimax.choose_column(game));
-  
-  // ----
   
 }

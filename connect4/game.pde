@@ -12,15 +12,13 @@ class Game {
   int col_height[] = new int[cols];  // source: https://stackoverflow.com/questions/2154251/any-shortcut-to-initialize-all-array-elements-to-zero
   
   // which player has the next move?
-  boolean player1_turn = true;
+  int player_index_turn = 1;
   
   // record each player's positions - each position corresponds to a hole in the board, identified with [col, row]
-  ArrayList<int[]> player1_positions = new ArrayList<int[]>(); 
-  ArrayList<int[]> player2_positions = new ArrayList<int[]>(); 
+  ArrayList<ArrayList<int[]>> players_positions = new ArrayList<ArrayList<int[]>>();
   // ArrayList is like a regular array, but with more methods (like add, remove, or clear):
   // Processing reference: https://processing.org/reference/ArrayList.html
   // Java reference: https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html 
-  // Instead of two ArrayLists, I tried having an array (or ArrayList) with two ArrayLists, but I couldn't work with this
   
   // record the winning player and the positions pieces that made them win
   int player_won = 0;  // 0 if no player has yet won, 1 if the 1st has won, and 2 if the 2nd has won
@@ -33,6 +31,15 @@ class Game {
   // diameter of the circles of the board and the margin between them
   float diameter = width/10;
   float margin = width/cols - diameter;
+  
+  Game() {
+    
+    // initialize the positions occupied by each player
+    for (int player_index = 1; player_index <= 2; player_index++) {
+      players_positions.add(new ArrayList<int[]>());
+    }
+    
+  }
   
   void add_piece(int col) {
     
@@ -48,19 +55,15 @@ class Game {
     int[] position = {col, rows - col_height[col] - 1};
     
     // udate the board, the height of the corresponding column, and the player's positions history
-    board[position[0]][position[1]] =  player1_turn ? 1 : 2;
+    board[position[0]][position[1]] =  player_index_turn;
     col_height[col]++;
-    (player1_turn ? player1_positions : player2_positions).add(position);
+    players_positions.get(player_index_turn-1).add(position);
     
-    // change turn
-    player1_turn = !player1_turn;
+    // change turn (1 --> 2;  2 --> 1)
+    player_index_turn = 3 - player_index_turn;
     
     // check if a player has won after the move
     game.check_win();
-    
-    // ------ test of GameEvaluation
-    // GameEvaluation game_eval = new GameEvaluation(this);
-    // println("player", player1_turn ? 1 : 2, "'s full evaluation: ", game_eval.evaluate());
     
   }
   
@@ -72,20 +75,22 @@ class Game {
      * Also useful to search through several game states and then go back to the current state
      */
      
+    int previous_player_index = 3 - player_index_turn;
+     
     // if previous player has no recorded positions (meaning we are at the beginning), don't do anything
-    if ((player1_turn ? player2_positions : player1_positions).size() == 0) return;
+    if (players_positions.get(previous_player_index-1).size() == 0) return;
      
     // get the last position from the previous player
-    int[] last_position = player1_turn ? player2_positions.get(player2_positions.size()-1) : player1_positions.get(player1_positions.size()-1);
+    int[] last_position = players_positions.get(previous_player_index-1).get( players_positions.get(previous_player_index-1).size() - 1 );
     
-    // remove it from the board, the column's height record, and the player's positions history
+    // remove it from the board, the column's height record, and the previous player's positions history
     board[last_position[0]][last_position[1]] =  0;
     col_height[last_position[0]]--;
-    (player1_turn ? player2_positions : player1_positions).remove(last_position);
+    players_positions.get(previous_player_index-1).remove(last_position);
     // println("removed [", last_position[0], ", ", last_position[1], "] from player", player1_turn ? "1" : "2");
     
     // change turn
-    player1_turn = !player1_turn;
+    player_index_turn = 3 - player_index_turn;
     
     // put game back into an unfinished state
     game.player_won = 0;
@@ -139,7 +144,7 @@ class Game {
      */
     
     for (int player_index = 1; player_index <= 2; player_index++) {
-      for (int[] player_position : (player_index == 1 ? player1_positions : player2_positions)) {
+      for (int[] player_position : players_positions.get(player_index-1)) {
         // this is for-each in Java ("enhanced for"); https://www.geeksforgeeks.org/for-each-loop-in-java/
         for (int[] step : steps) {
           if (check_alignment(player_position, step, 0, player_index)) {
@@ -177,8 +182,7 @@ class Game {
         
         // show shadows in holes if mouse is hovering over column and the game is yet to finish
         if (floor(float(mouseX)/width*cols) == col && rows - row > col_height[col] && player_won == 0) {
-          if (player1_turn) filling_color = color(247, 191, 187);  // lighter red
-          else filling_color = color(254, 241, 125);  // lighter yellow
+          filling_color = player_index_turn == 1 ? color(247, 191, 187) : color(254, 241, 125);  // lighter red or yellow 
         }
         
         // highlight the winning pieces if the game has finished
@@ -331,7 +335,7 @@ class GameEvaluation {
     
     for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
     
-      player_positions = player_index == 1 ? game.player1_positions : game.player2_positions;
+      player_positions = game.players_positions.get(player_index-1);
       
       for (int pos_index = 0; pos_index < player_positions.size(); pos_index++) {
         
@@ -374,7 +378,7 @@ class GameEvaluation {
      */
     
     float evaluation = evaluate_player(1) - evaluate_player(2);
-    if (!game.player1_turn) evaluation = -evaluation;
+    if (game.player_index_turn == 2) evaluation = -evaluation;
     
     return evaluation;
     
