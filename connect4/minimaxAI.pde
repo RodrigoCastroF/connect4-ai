@@ -8,7 +8,7 @@ class MiniMax {
     
     if (depth == 0 || game.player_won != 0) {
       float evaluation = game_eval.evaluate();
-      // println(evaluated_state, evaluation, " (for player", game.player1_turn ? 1 : 2, ")");
+      // println(evaluated_state, evaluation, " (for player", player_index_turn, ")");
       return evaluation;
     }
     
@@ -32,7 +32,7 @@ class MiniMax {
       }
     }
     
-    // println(evaluated_state, max_evaluation, " (for player", game.player1_turn ? 1 : 2, ")");
+    // println(evaluated_state, max_evaluation, " (for player", player_index_turn, ")");
     return max_evaluation;
     
   }

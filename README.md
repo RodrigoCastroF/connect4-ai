@@ -35,7 +35,7 @@ That is, if `x` represents the pieces of the player we are evaluating,
 `o` the opponent player's pieces,
 and `.` the holes of the board:
 - `.xxx.` will be counted as
-an alignment with $N=3$ pieces and 2 hole of height $n=1$,
+an alignment with $N=3$ pieces and 2 holes of height $n=1$,
 so it will add $4^{3 - 1} \cdot 4^{3 - 1} = 256$ to the evaluation
 of the player's position.
 - `oxxx.` will be counted as

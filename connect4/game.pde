@@ -2,28 +2,28 @@ class Game {
   
   int cols = 7;
   int rows = 6;
-  // note that col = 0 will be the upper one, while col = cols - 1 will be the lower one (due to Processing's coordinate system)
+  // note that col = 0 will be the upper column, while col = cols - 1 will be the lower one (due to Processing's coordinate system)
   
   // representation of each game state
   // matrix with 0 when there is no piece, 1 when there is a piece of the 1st player, and 2 when there is a piece of the 2nd
   int board[][] = new int[cols][rows];
   
   // number of positions occupied in each column
-  int col_height[] = new int[cols];  // source: https://stackoverflow.com/questions/2154251/any-shortcut-to-initialize-all-array-elements-to-zero
+  int col_height[] = new int[cols];  // this initializes as an array of 0s, source: https://stackoverflow.com/questions/2154251/any-shortcut-to-initialize-all-array-elements-to-zero
   
-  // which player has the next move?
+  // index (1 or 2) of the player that has the next move (initially player 1)
   int player_index_turn = 1;
   
-  // record each player's positions - each position corresponds to a hole in the board, identified with [col, row]
+  // record each player's positions - the first ArrayList corresponds to player 1's positions; the second to player 2's positions;
+  // and the ArrayList inside each of them contains the arrays [col, row] that represent the positions of the corresponding player
   ArrayList<ArrayList<int[]>> players_positions = new ArrayList<ArrayList<int[]>>();
   // ArrayList is like a regular array, but with more methods (like add, remove, or clear):
   // Processing reference: https://processing.org/reference/ArrayList.html
   // Java reference: https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html 
   
   // record the winning player and the positions pieces that made them win
-  int player_won = 0;  // 0 if no player has yet won, 1 if the 1st has won, and 2 if the 2nd has won
+  int player_won = 0;  // 0 if no player has yet won, 1 if player 1 has won, and 2 if player 2 has won
   ArrayList<int[]> winning_positions = new ArrayList<int[]>();  // ArrayList of arrays
-  
   
   // the four directions in which a connect-4 can happen (vertical, horizontal, diagonal, inverse diagonal)
   int[][] steps = new int[][] {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
@@ -71,8 +71,8 @@ class Game {
     
     /**
      * Rewinds back to the previous move
-     * Used for the undo button
-     * Also useful to search through several game states and then go back to the current state
+     * Used for the undo button in the main program
+     * Also used by MiniMax to search through several game states and then go back to the current state
      */
      
     int previous_player_index = 3 - player_index_turn;
@@ -87,7 +87,6 @@ class Game {
     board[last_position[0]][last_position[1]] =  0;
     col_height[last_position[0]]--;
     players_positions.get(previous_player_index-1).remove(last_position);
-    // println("removed [", last_position[0], ", ", last_position[1], "] from player", player1_turn ? "1" : "2");
     
     // change turn
     player_index_turn = 3 - player_index_turn;
@@ -210,7 +209,8 @@ class GameEvaluation {
   
   Game game;
   
-  // the pieces' positions that have already been visited in each direction
+  // the pieces' positions that have already been visited in each direction -
+  // we have an ArrayList of arrays for each of the 4 directions, contained in another ArrayList
   ArrayList<ArrayList<int[]>> positions_visited = new ArrayList<>();
   
   // holes enclosing the aligned pieces of each player, for every direction, and for every starting position
@@ -330,17 +330,13 @@ class GameEvaluation {
     float evaluation_for_alignment;
     
     // if player has won, change their evaluation to a very high number
-    
     if (game.player_won == player_index) return 1000;
     
     // get all aligned pieces, iterating over all directions and starting positions for the given player
-    
-    for (int step_index = 0; step_index < game.steps.length; step_index++) {  // 'size()' with ArrayInt, 'length' with array
-    
+    for (int step_index = 0; step_index < game.steps.length; step_index++) {  // Java has 'size()' for ArrayList, and 'length' for array
       player_positions = game.players_positions.get(player_index-1);
       
       for (int pos_index = 0; pos_index < player_positions.size(); pos_index++) {
-        
         position = player_positions.get(pos_index);
         
         // add empty array to enclosing holes to avoid a NullPointerException
