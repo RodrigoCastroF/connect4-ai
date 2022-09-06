@@ -34,15 +34,19 @@ in order to fill the hole $h_{n}$.
 That is, if `x` represents the pieces of the player we are evaluating,
 `o` the opponent player's pieces,
 and `.` the holes of the board:
+- `.xxx.` will be counted as
+an alignment with $N=3$ pieces and 2 hole of height $n=1$,
+so it will add $4^{3 - 1} \cdot 4^{3 - 1} = 256$ to the evaluation
+of the player's position.
 - `oxxx.` will be counted as
+an alignment with $N=3$ pieces and only 1 hole of height $n=1$,
+so it will add $4^{3 - 1} = 16$ to the evaluation.
+- `oxx.x.` will also be counted as
 an alignment with $N=3$ pieces and 1 hole of height $n=1$,
-so it will add $4^{3 - 1} = 16$ to the evaluation of the player's position.
-- `.xx.` will be counted as
-an alignment with $N=2$ pieces and 2 holes of height $n=1$,
-so it will add $4^{2 - 1} \cdot 4^{2 - 1} = 16$ to the evaluation.
-- `x.x.` will also be counted as
-an alignment with $N=2$ pieces and 2 holes of height $n=1$,
-adding $16$ to the evaluation.
+adding $4^{3 - 1} = 16$ to the evaluation.
+- `oxx.` will be counted as
+an alignment with $N=2$ pieces and 1 hole of height $n=1$,
+so it will add $4^{2 - 1} = 4$ to the evaluation.
 
 Of course, being Connect 4 a zero-sum game,
 the full evaluation of a player's position in the board
