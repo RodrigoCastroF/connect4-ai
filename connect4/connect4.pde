@@ -52,10 +52,13 @@ void mousePressed() {
   // PLAYER 2 (AI)'S TURN
   
   chosen_col = minimax.choose_column(game);
+  // chosen_col = 0;
   
   game.add_piece(chosen_col);
   current_state.add(chosen_col);
   println(current_state, "is the current game state now");
+  // GameEvaluation game_eval = new GameEvaluation(game);
+  // println(game_eval.evaluate_player(1));
   println();
   
 }

@@ -358,7 +358,7 @@ class GameEvaluation {
           evaluation_for_alignment = 1;
           for (int[] enclosing_hole : enclosing_holes_here) {
             /* print("[", enclosing_hole[0], ", ", enclosing_hole[1], "]",
-                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") "); */  
+                  "(height required:", (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]],") "); */
             height_required = (game.rows - enclosing_hole[1]) - game.col_height[enclosing_hole[0]];
             // ^ number of pieces that need to be added to fill the whole
             evaluation_for_alignment *= pow(4, num_pieces_aligned - height_required);
