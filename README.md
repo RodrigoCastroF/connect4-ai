@@ -2,33 +2,37 @@
 
 Play against an AI of Connect 4 in Processing.
 
-The AI uses the MiniMax algorithm (NegaMax variant) but,
+The AI uses the **MiniMax algorithm (NegaMax variant)** but,
 as a difference with most other implementations,
-it doesn't need to reach the end of the game in order to evaluate a move.
-This is done using an evaluation function
+it does not need to reach all possible terminating game states
+in order to evaluate a move.
+Instead, the AI looks only a limited number of moves ahead
+(four moves).
+
+This is achieved using an evaluation function
 that counts the pieces aligned (and their surrounding holes)
 by each player for a particular board position.
-More details bellow.
+Using this function, it is possible to evaluate a non-terminating game state.
+More details below.
 
-Even with a depth of 0 (the AI looks only at the current possible moves),
-it is able to beat players that aren't paying enough attention to the board.
-And with a depth of 4 (the AI looks 4 moves ahead),
-I haven't been able to beat it.
-Of course, it is still possible to beat it; a MiniMax implementation
-with indefinite depth is able to do so.
+As the AI does not look arbitrarily far into future game states,
+a human or computer program that thinks farther ahead is able to defeat it.
+However, I found that, even with a depth of just four moves,
+beating this AI is challenging for a human.
 
 ## Evaluation function
 
-After much experimentation, I concluded that
-the best heuristic to evaluate a board position
-for a particular player is this function:
+After much experimentation, I came to the conclusion that
+the following function is the best heuristic to
+assess a board position for a certain player:
 
 $$ e = \sum_{a_{N}}   \prod_{h_{n}} { 4^{N - n} } $$
 
-Where $a_{N}$ refers to every alignment of $N$ pieces (2 or 3) in the board,
+Where $a_{N}$ refers to every alignment of $N$ pieces (2 or 3)
+of the player in the board,
 and $h_{n}$ is each of the holes enclosing this alignment, if any.
 Each hole can be at one end of the alignment or in the middle.
-Finally, $n$ is the number of pieces that should be added to the board
+Finally, $n$ is the number of pieces that must be added to the board
 in order to fill the hole $h_{n}$.
 
 That is, if `x` represents the pieces of the player we are evaluating,
