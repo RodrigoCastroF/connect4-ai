@@ -1,4 +1,5 @@
 Game game;
+GameEvaluation game_eval;
 MiniMax minimax;
 ArrayList<Integer> current_state = new ArrayList<Integer> ();  // current board position (as the sequence of moves played)
 
@@ -49,13 +50,23 @@ void mousePressed() {
   current_state.add(chosen_col);
   println(current_state, "is the current game state now");
   
+  game_eval = new GameEvaluation(game);
+  println("Evaluation for player 1:", game_eval.evaluate_player(1));
+  println("Evaluation for player 2:", game_eval.evaluate_player(2));
+  
   // PLAYER 2 (AI)'S TURN
+  // (Comment out this whole section to play human vs. human)
   
   chosen_col = minimax.choose_column(game);
   
   game.add_piece(chosen_col);
   current_state.add(chosen_col);
   println(current_state, "is the current game state now");
+  
+  game_eval = new GameEvaluation(game);
+  println("Evaluation for player 1:", game_eval.evaluate_player(1));
+  println("Evaluation for player 2:", game_eval.evaluate_player(2));
+  
   println();
   
 }
