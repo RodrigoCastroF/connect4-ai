@@ -7,7 +7,19 @@ void setup() {
   
   size(700, 600);
   game = new Game();
-  minimax = new MiniMax();
+  minimax = new MiniMax(3);
+  
+  /* int[] starting_state = {1, 0, 2, 3, 2, 0, 2, 2, 4};
+  for (int move: starting_state) {
+    game.add_piece(move);
+    current_state.add(move);
+  }
+  if (game.player_index_turn == 2) {  // let AI take its first turn
+    int chosen_col = minimax.choose_column(game);
+    game.add_piece(chosen_col);
+    current_state.add(chosen_col);
+    println(current_state, "is the current game state now");
+  } */
   
 }
 

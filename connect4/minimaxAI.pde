@@ -1,6 +1,11 @@
 class MiniMax {
   
   ArrayList<Integer> evaluated_state = new ArrayList<Integer> ();  // current evaluated state
+  int max_depth;
+  
+  MiniMax(int depth) {
+    max_depth = depth;
+  }
   
   float deep_evaluate(Game game, int depth) {
     
@@ -8,7 +13,7 @@ class MiniMax {
     
     if (depth == 0 || game.player_won != 0) {
       float evaluation = game_eval.evaluate();
-      // println(evaluated_state, evaluation, " (for player", player_index_turn, ")");
+      // println(evaluated_state, evaluation, " (for player", game.player_index_turn, ")");
       return evaluation;
     }
     
@@ -32,7 +37,7 @@ class MiniMax {
       }
     }
     
-    // println(evaluated_state, max_evaluation, " (for player", player_index_turn, ")");
+    // println(evaluated_state, max_evaluation, " (for player", game.player_index_turn, ")");
     return max_evaluation;
     
   }
@@ -51,7 +56,7 @@ class MiniMax {
           evaluated_state.add(col); 
           
           // deeply evaluate the game state after each move, taking the best one
-          evaluation = -deep_evaluate(game, 4);
+          evaluation = -deep_evaluate(game, max_depth);
           if (evaluation > max_evaluation) {
              max_evaluation = evaluation;
              chosen_col = col;

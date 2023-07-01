@@ -236,7 +236,7 @@ class GameEvaluation {
     
   }
   
-  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index, int jumps, int positions_explored) {
+  int count_aligned_pieces(int[] position, int pos_index, int step_index, int player_index, int jumps, boolean last_time_jumped, int positions_explored) {
    
     /**
      * Counts the number of aligned pieces of the specified player in the given direction (step), starting from the indicated position
@@ -245,7 +245,8 @@ class GameEvaluation {
      * @pos_index: index of the first position explored (the piece from which the method was called) in the player's recorded positions
      * @step_index: index of the direction, given by its position in {{0, 1}, {1, 0}, {1, 1}, {1, -1}} (as defined above)
      * @player_index: index of the player (1 or 2) whose pieces are being counted
-     * @jumps: initially 1, turns into 0 when one blank space is skipped (which is allowed, to count positions like x.xx as connect3s)
+     * @last_time_jumped: whether there was a jump in the previous call or not
+     * @jumps: initially 2, drops to 1 and then 0 every time a blank space is skipped (which is allowed, to count positions like x.xx as connect3s)
      * @positions_explored: initially 4, decrements with every call of the method
      */
     
@@ -280,11 +281,20 @@ class GameEvaluation {
     // and only continue exploring if method hasn't used its jump yet
     if (game.board[position[0]][position[1]] == 0)
     {
-      if (jumps > 0 && positions_explored > 0)
+      if (jumps > 0 && ! last_time_jumped && positions_explored > 0)
       {
-        enclosing_holes.get(player_index-1).get(step_index).get(pos_index).add(position);
-        return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps - 1, positions_explored - 1) +
-               count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps - 1, positions_explored - 1);
+        // don't add the same enclosing holes
+        boolean already_added = false;
+        for (int[] hole_added : enclosing_holes.get(player_index-1).get(step_index).get(pos_index)) {
+          if (hole_added[0] == position[0] && hole_added[1] == position[1]) {
+            already_added = true;
+          }
+        }
+        if (! already_added) {
+          enclosing_holes.get(player_index-1).get(step_index).get(pos_index).add(position); 
+        }
+        return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps - 1, true, positions_explored - 1) +
+               count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps - 1, true, positions_explored - 1);
       }
       return 0;
     }
@@ -293,8 +303,8 @@ class GameEvaluation {
     // and we can safely add it to the visited positions
     positions_visited.get(step_index).add(position);
     
-    return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps, positions_explored - 1) +
-           count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps, positions_explored - 1) + 1;
+    return count_aligned_pieces(new_position1, pos_index, step_index, player_index, jumps, false, positions_explored - 1) +
+           count_aligned_pieces(new_position2, pos_index, step_index, player_index, jumps, false, positions_explored - 1) + 1;
     
   }
   
@@ -343,7 +353,7 @@ class GameEvaluation {
         enclosing_holes.get(player_index-1).get(step_index).add(new ArrayList<int[]>());
         
         // calculate the number of aligned pieces and retrieve the updated enclosing holes (which will no longer be empty)
-        num_pieces_aligned = count_aligned_pieces(position, pos_index, step_index, player_index, 1, 4);
+        num_pieces_aligned = count_aligned_pieces(position, pos_index, step_index, player_index, 2, false, 4);
         enclosing_holes_here = enclosing_holes.get(player_index-1).get(step_index).get(pos_index);
         
         if (num_pieces_aligned > 1 && enclosing_holes_here.size() > 0) {
